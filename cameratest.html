@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カメラテスト（楕円マスク75%）</title>
+    <title>カメラテスト（PNG画像追加）</title>
     <style>
         body { margin: 0; background: #000; }
 
@@ -36,7 +36,6 @@
             pointer-events: none; 
             z-index: 0; 
             
-            /* ▼▼▼ 変更：楕円のサイズを75%に ▼▼▼ */
             -webkit-mask-image: radial-gradient(
                 ellipse at center,
                 transparent calc(75% / 2), /* 楕円の内側は透過 */
@@ -47,7 +46,6 @@
                 transparent calc(75% / 2),
                 black calc(75% / 2 + 1px)
             );
-            /* ▲▲▲ 変更ここまで ▲▲▲ */
         }
 
         /* ガイド線要素 (変更なし) */
@@ -85,6 +83,21 @@
             transform: translateY(-50%); 
         }
 
+        /* ▼▼▼ 追加 ▼▼▼ */
+        /* 中央に配置するPNG画像 */
+        .center-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* 要素の中央を基準に配置 */
+            max-width: 80%; /* 画面サイズに合わせて調整 */
+            max-height: 80%; /* 画面サイズに合わせて調整 */
+            object-fit: contain; /* 画像がはみ出さないように */
+            pointer-events: none; /* クリック操作を妨げない */
+            z-index: 3; /* ガイド線(2)よりも手前 */
+        }
+        /* ▲▲▲ 追加ここまで ▲▲▲ */
+
         /* ボタン (変更なし) */
         button {
             position: fixed;
@@ -103,7 +116,8 @@
         <video id="camera-stream" autoplay playsinline></video>
         <div class="overlay"></div>
         <div class="guide-crosshair"></div>
-    </div>
+        <img src="theeth.png" alt="中央画像" class="center-image">
+        </div>
     
     <button id="start-button">カメラを起動</button>
 
