@@ -3,11 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カメラテスト</title>
+    <title>カメラテスト（ガイド線付き）</title>
     <style>
-        /* ビデオ要素を画面いっぱいに */
         body { margin: 0; background: #000; }
-        video { width: 100vw; height: 100vh; }
+
+        /* 映像とガイド線を重ねるためのコンテナ */
+        .camera-container {
+            position: relative; /* 子要素を重ねる基準 */
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* カメラ映像 */
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 画面いっぱいに表示 */
+        }
+
+        /* ガイド線要素 */
+        .guide-crosshair {
+            position: absolute; /* 親(container)を基準に重ねる */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* ★重要：これが無いとガイド線が邪魔で操作できない */
+        }
+
+        /* 縦線 (疑似要素::beforeで作成) */
+        .guide-crosshair::before {
+            content: '';
+            position: absolute;
+            left: 50%; /* 左右中央 */
+            top: 0;
+            width: 2px; /* 線の太さ */
+            height: 100%;
+            background-color: rgba(255, 0, 0, 0.7); /* 線の色（赤・半透明） */
+            transform: translateX(-50%); /* 中央揃えの調整 */
+        }
+
+        /* 横線 (疑似要素::afterで作成) */
+        .guide-crosshair::after {
+            content: '';
+            position: absolute;
+            top: 50%; /* 上下中央 */
+            left: 0;
+            width: 100%;
+            height: 2px; /* 線の太さ */
+            background-color: rgba(255, 0, 0, 0.7); /* 線の色 */
+            transform: translateY(-50%); /* 中央揃えの調整 */
+        }
+
+        /* ボタン（変更なし） */
         button {
             position: fixed;
             bottom: 20px;
@@ -15,12 +63,17 @@
             transform: translateX(-50%);
             font-size: 1.2rem;
             padding: 10px 20px;
+            z-index: 10; /* ガイド線より手前に表示 */
         }
     </style>
 </head>
 <body>
 
-    <video id="camera-stream" autoplay playsinline></video>
+    <div class="camera-container">
+        <video id="camera-stream" autoplay playsinline></video>
+        
+        <div class="guide-crosshair"></div>
+    </div>
     
     <button id="start-button">カメラを起動</button>
 
@@ -28,29 +81,12 @@
         const videoElement = document.getElementById('camera-stream');
         const startButton = document.getElementById('start-button');
 
-        // ボタンがクリックされた時の処理
         startButton.addEventListener('click', async () => {
             try {
-                // ユーザーにカメラの使用許可を求める
-                // { video: true } : どのカメラでもOK
-                // { video: { facingMode: 'user' } } : インカメラ（自撮り用）
-                // { video: { facingMode: 'environment' } } : アウトカメラ（背面）
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' } // 背面カメラを優先
+                    video: { facingMode: 'environment' }
                 });
-                
-                // video要素にストリームをセット
                 videoElement.srcObject = stream;
-                
-                // ボタンを隠す
                 startButton.style.display = 'none';
-
             } catch (error) {
-                // ユーザーが許可しなかった場合や、カメラがない場合
-                console.error('カメラの起動に失敗しました:', error);
-                alert('カメラの起動に失敗しました。許可が下りていないか、対応していないブラウザです。');
-            }
-        });
-    </script>
-</body>
-</html>
+                console.error
