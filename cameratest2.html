@@ -50,41 +50,6 @@
             /* ▲▲▲ 変更ここまで ▲▲▲ */
         }
 
-        /* ガイド線要素 (変更なし) */
-        .guide-crosshair {
-            position: absolute; 
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; 
-            z-index: 2;         
-        }
-
-        /* 縦線 (変更なし) */
-        .guide-crosshair::before {
-            content: '';
-            position: absolute;
-            left: 50%; 
-            top: 0;
-            width: 2px; 
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.7); 
-            transform: translateX(-50%); 
-        }
-
-        /* 横線 (変更なし) */
-        .guide-crosshair::after {
-            content: '';
-            position: absolute;
-            top: 50%; 
-            left: 0;
-            width: 100%;
-            height: 2px; 
-            background-color: rgba(255, 255, 255, 0.7); 
-            transform: translateY(-50%); 
-        }
-
         /* ボタン (変更なし) */
         button {
             position: fixed;
