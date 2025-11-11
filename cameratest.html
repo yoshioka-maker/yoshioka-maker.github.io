@@ -3,33 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カメラテスト（白ガイド線・診断付き）</title>
+    <title>カメラテスト（白ガイド線・透過オーバーレイ付き）</title>
     <style>
         body { margin: 0; background: #000; }
 
         /* 映像とガイド線を重ねるためのコンテナ */
         .camera-container {
-            position: relative; /* 子要素を重ねる基準 */
+            position: relative; 
             width: 100vw;
             height: 100vh;
-            overflow: hidden; /* videoがはみ出さないように */
-            
-            /* コンテナ自体を階層 1 に設定 */
+            overflow: hidden; 
             z-index: 1; 
         }
 
         /* カメラ映像 */
         video {
-            position: absolute; /* 親コンテナ基準で配置 */
+            position: absolute; 
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            
-            /* z-indexをマイナスにし、コンテナの背面に配置 */
             z-index: -1;         
         }
+
+        /* ▼▼▼ 追加 ▼▼▼ */
+        /* 黒の透過オーバーレイ */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.2); /* 黒色で透過度20% */
+            pointer-events: none; /* クリック操作を妨げない */
+            z-index: 0; /* video(-1)より上、guide-crosshair(2)より下 */
+        }
+        /* ▲▲▲ 追加 ▲▲▲ */
+
 
         /* ガイド線要素 */
         .guide-crosshair {
@@ -39,40 +50,34 @@
             width: 100%;
             height: 100%;
             pointer-events: none; 
-            
-            /* z-index: 2 (コンテナの階層 2) */
             z-index: 2;         
         }
 
-        /* 縦線 (疑似要素::beforeで作成) */
+        /* 縦線 (変更なし) */
         .guide-crosshair::before {
             content: '';
             position: absolute;
             left: 50%; 
             top: 0;
-            width: 2px; /* 線の太さ */
+            width: 2px; 
             height: 100%;
-            /* ▼▼▼ 色を白(半透明)に変更 ▼▼▼ */
             background-color: rgba(255, 255, 255, 0.7); 
-            /* ▲▲▲ 変更ここまで ▲▲▲ */
             transform: translateX(-50%); 
         }
 
-        /* 横線 (疑似要素::afterで作成) */
+        /* 横線 (変更なし) */
         .guide-crosshair::after {
             content: '';
             position: absolute;
             top: 50%; 
             left: 0;
             width: 100%;
-            height: 2px; /* 線の太さ */
-            /* ▼▼▼ 色を白(半透明)に変更 ▼▼▼ */
+            height: 2px; 
             background-color: rgba(255, 255, 255, 0.7); 
-            /* ▲▲▲ 変更ここまで ▲▲▲ */
             transform: translateY(-50%); 
         }
 
-        /* ボタン */
+        /* ボタン (変更なし) */
         button {
             position: fixed;
             bottom: 20px;
@@ -80,8 +85,6 @@
             transform: translateX(-50%);
             font-size: 1.2rem;
             padding: 10px 20px;
-            
-            /* 階層 10 (コンテナ(1)より明確に手前) */
             z-index: 10; 
         }
     </style>
@@ -91,6 +94,7 @@
     <div class="camera-container">
         <video id="camera-stream" autoplay playsinline></video>
         
+        <div class="overlay"></div>
         <div class="guide-crosshair"></div>
     </div>
     
@@ -100,30 +104,17 @@
         const videoElement = document.getElementById('camera-stream');
         const startButton = document.getElementById('start-button');
 
-        // ボタンがクリックされた時の処理
         startButton.addEventListener('click', async () => {
-            
-            // ▼▼▼ 診断用アラート(1) ▼▼▼
             alert('ボタンが押されました！これからカメラを起動します。');
-            // ▲▲▲ 診断用アラート(1) ▲▲▲
-
             try {
-                // ユーザーにカメラの使用許可を求める
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' } // 背面カメラを優先
+                    video: { facingMode: 'environment' }
                 });
-                
-                // video要素にストリームをセット
                 videoElement.srcObject = stream;
-                
-                // ボタンを隠す
                 startButton.style.display = 'none';
-
             } catch (error) {
-                // ▼▼▼ 診断用アラート(2) ▼▼▼
                 console.error('カメラの起動に失敗しました:', error);
                 alert('カメラの起動に失敗しました。\nエラー内容: ' + error.message);
-                // ▲▲▲ 診断用アラート(2) ▲▲▲
             }
         });
     </script>
