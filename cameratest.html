@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カメラテスト（teeth.png 80%サイズ）</title>
+    <title>カメラテスト（teeth.png 60%サイズ）</title>
     <style>
         body { margin: 0; background: #000; }
 
@@ -91,11 +91,8 @@
             transform: translate(-50%, -50%); 
             
             /* ▼▼▼ ここを修正 ▼▼▼ */
-            width: 80%; /* 画像の幅を親要素の80%に設定 */
-            height: auto; /* 幅に合わせて高さを自動調整し、アスペクト比を維持 */
-            /* max-widthとmax-heightは、width/heightより優先度が低いので削除してもOKですが、残しておいても問題ありません */
-            /* max-width: 80%; */ 
-            /* max-height: 80%; */ 
+            width: 60%; /* 画像の幅を親要素の60%に設定 */
+            height: auto; /* 幅に合わせて高さを自動調整 */
             /* ▲▲▲ 修正ここまで ▲▲▲ */
 
             object-fit: contain; 
