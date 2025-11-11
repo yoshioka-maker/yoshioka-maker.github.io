@@ -3,82 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カメラテスト（ガイド線付き）</title>
+    <title>カメラテスト（ガイド線・診断付き）</title>
     <style>
-    body { margin: 0; background: #000; }
+        body { margin: 0; background: #000; }
 
-    /* 映像とガイド線を重ねるためのコンテナ */
-    .camera-container {
-        position: relative; 
-        width: 100vw;
-        height: 100vh;
-        
-        /* ▼▼▼ 追加 ▼▼▼ */
-        /* コンテナ自体を階層 1 に設定します */
-        z-index: 1; 
-        /* ▲▲▲ 追加 ▲▲▲ */
-    }
+        /* 映像とガイド線を重ねるためのコンテナ */
+        .camera-container {
+            position: relative; /* 子要素を重ねる基準 */
+            width: 100vw;
+            height: 100vh;
+            
+            /* コンテナ自体を階層 1 に設定します */
+            z-index: 1; 
+        }
 
-    /* カメラ映像 */
-    video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        position: relative; 
-        /* z-index: 1; (親コンテナ内の階層1になります) */
-        /* ※このz-indexはあってもなくてもOKですが、guideより低ければ問題ありません */
-    }
+        /* カメラ映像 */
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            
+            position: relative; /* z-indexを効かせるため */
+            z-index: 1;         /* コンテナ内の階層 1 (ガイド線より下) */
+        }
 
-    /* ガイド線要素 */
-    .guide-crosshair {
-        position: absolute; 
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none; 
-        z-index: 2; /* 親コンテナ内の階層 2 (videoより上) */
-    }
+        /* ガイド線要素 */
+        .guide-crosshair {
+            position: absolute; /* 親(container)を基準に重ねる */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* クリック操作を妨げない */
+            
+            z-index: 2;         /* コンテナ内の階層 2 (videoより上) */
+        }
 
-    /* 縦線 (変更なし) */
-    .guide-crosshair::before {
-        content: '';
-        position: absolute;
-        left: 50%; 
-        top: 0;
-        width: 2px; 
-        height: 100%;
-        background-color: rgba(255, 0, 0, 0.7); 
-        transform: translateX(-50%); 
-    }
+        /* 縦線 (疑似要素::beforeで作成) */
+        .guide-crosshair::before {
+            content: '';
+            position: absolute;
+            left: 50%; 
+            top: 0;
+            width: 2px; /* 線の太さ */
+            height: 100%;
+            background-color: rgba(255, 0, 0, 0.7); /* 線の色 */
+            transform: translateX(-50%); 
+        }
 
-    /* 横線 (変更なし) */
-    .guide-crosshair::after {
-        content: '';
-        position: absolute;
-        top: 50%; 
-        left: 0;
-        width: 100%;
-        height: 2px; 
-        background-color: rgba(255, 0, 0, 0.7); 
-        transform: translateY(-50%); 
-    }
+        /* 横線 (疑似要素::afterで作成) */
+        .guide-crosshair::after {
+            content: '';
+            position: absolute;
+            top: 50%; 
+            left: 0;
+            width: 100%;
+            height: 2px; /* 線の太さ */
+            background-color: rgba(255, 0, 0, 0.7); /* 線の色 */
+            transform: translateY(-50%); 
+        }
 
-    /* ボタン */
-    button {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 1.2rem;
-        padding: 10px 20px;
-        
-        /* ▼▼▼ 修正 ▼▼▼ */
-        /* コンテナ(z-index: 1)よりも明確に手前に来るようにします */
-        z-index: 10; 
-        /* ▲▲▲ 修正 ▲▲▲ */
-    }
-</style>
+        /* ボタン */
+        button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            
+            /* コンテナ(z-index: 1)よりも明確に手前に来るようにします */
+            z-index: 10; 
+        }
+    </style>
 </head>
 <body>
 
@@ -94,12 +91,34 @@
         const videoElement = document.getElementById('camera-stream');
         const startButton = document.getElementById('start-button');
 
+        // ボタンがクリックされた時の処理
         startButton.addEventListener('click', async () => {
+            
+            // ▼▼▼ 診断用アラート(1) ▼▼▼
+            // まず、ボタンが押されたことを確認します
+            alert('ボタンが押されました！これからカメラを起動します。');
+            // ▲▲▲ 診断用アラート(1) ▲▲▲
+
             try {
+                // ユーザーにカメラの使用許可を求める
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' }
+                    video: { facingMode: 'environment' } // 背面カメラを優先
                 });
+                
+                // video要素にストリームをセット
                 videoElement.srcObject = stream;
+                
+                // ボタンを隠す
                 startButton.style.display = 'none';
+
             } catch (error) {
-                console.error
+                // ▼▼▼ 診断用アラート(2) ▼▼▼
+                // もしエラー（catch）に入ったら、その内容を表示します
+                console.error('カメラの起動に失敗しました:', error);
+                alert('カメラの起動に失敗しました。\nエラー内容: ' + error.message);
+                // ▲▲▲ 診断用アラート(2) ▲▲▲
+            }
+        });
+    </script>
+</body>
+</html>
