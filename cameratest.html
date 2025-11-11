@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カメラテスト（白ガイド線・透過80%）</title>
+    <title>カメラテスト（楕円マスク付き）</title>
     <style>
         body { margin: 0; background: #000; }
 
@@ -32,16 +32,27 @@
             left: 0;
             width: 100%;
             height: 100%;
-            
-            /* ▼▼▼ 変更（不透明度を80% = 0.8 に） ▼▼▼ */
-            background-color: rgba(0, 0, 0, 0.8); /* 黒色で不透明度80% */
-            /* ▲▲▲ 変更ここまで ▲▲▲ */
-
+            background-color: rgba(0, 0, 0, 0.2); /* 黒色で不透明度20% (透過率80%) */
             pointer-events: none; 
             z-index: 0; 
+            
+            /* ▼▼▼ 追加 ▼▼▼ */
+            /* 楕円マスクを適用 */
+            /* 円形グラデーションを使って中央を透明に、外側を不透明にする */
+            -webkit-mask-image: radial-gradient(
+                ellipse at center,
+                transparent calc(50% / 2), /* 楕円の内側は透過 */
+                black calc(50% / 2 + 1px) /* 楕円の外側は不透明（黒） */
+            );
+            mask-image: radial-gradient(
+                ellipse at center,
+                transparent calc(50% / 2),
+                black calc(50% / 2 + 1px)
+            );
+            /* ▲▲▲ 追加ここまで ▲▲▲ */
         }
 
-        /* ガイド線要素 */
+        /* ガイド線要素 (変更なし) */
         .guide-crosshair {
             position: absolute; 
             top: 0;
@@ -92,9 +103,7 @@
 
     <div class="camera-container">
         <video id="camera-stream" autoplay playsinline></video>
-        
         <div class="overlay"></div>
-        
         <div class="guide-crosshair"></div>
     </div>
     
@@ -108,15 +117,4 @@
             alert('ボタンが押されました！これからカメラを起動します。');
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' }
-                });
-                videoElement.srcObject = stream;
-                startButton.style.display = 'none';
-            } catch (error) {
-                console.error('カメラの起動に失敗しました:', error);
-                alert('カメラの起動に失敗しました。\nエラー内容: ' + error.message);
-            }
-        });
-    </script>
-</body>
-</html>
+                    video: { facingMode
