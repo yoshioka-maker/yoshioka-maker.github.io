@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>6チーム総当たり 4回戦総当たり リーグ戦勝敗表 & 順位表</title>
+  <title>6チーム 4回戦総当たりリーグ戦</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -203,8 +203,8 @@
 
     <!-- 操作ボタン -->
     <div class="btn-container">
-      <button class="btn-save" onclick="exportData()">💾 データをファイルに保存</button>
-      <button class="btn-load" onclick="document.getElementById('fileInput').click()">📂 保存ファイルを開く</button>
+      <button class="btn-save" onclick="exportData()">💾 バックアップ(ファイル書き出し)</button>
+      <button class="btn-load" onclick="document.getElementById('fileInput').click()">📂 復元(ファイル読み込み)</button>
       <button class="btn-reset" onclick="resetData()">🔄 データを全リセット</button>
       <input type="file" id="fileInput" style="display:none" accept=".json" onchange="importData(event)">
     </div>
@@ -212,32 +212,24 @@
 
   <script>
     const N = 6;
+    const STORAGE_KEY = 'league_4round_auto_save_v1';
 
-    // 定型対戦スケジュール（ラウンドロビン H&A 2巡 = 全20節）
-    // 各試合構造: { id, home: インデックス, away: インデックス }
     const scheduleTemplate = [
-      // 1巡目 (ホーム1回目)
       { round: 1, matches: [{id: 0, h:0, a:1}, {id: 1, h:2, a:3}, {id: 2, h:4, a:5}] },
       { round: 2, matches: [{id: 3, h:1, a:2}, {id: 4, h:3, a:4}, {id: 5, h:5, a:0}] },
       { round: 3, matches: [{id: 6, h:0, a:2}, {id: 7, h:1, a:4}, {id: 8, h:3, a:5}] },
       { round: 4, matches: [{id: 9, h:4, a:0}, {id: 10, h:5, a:1}, {id: 11, h:2, a:3}] },
       { round: 5, matches: [{id: 12, h:0, a:3}, {id: 13, h:1, a:5}, {id: 14, h:2, a:4}] },
-      
-      // 2巡目 (ホーム1回目反転)
       { round: 6, matches: [{id: 15, h:1, a:0}, {id: 16, h:3, a:2}, {id: 17, h:5, a:4}] },
       { round: 7, matches: [{id: 18, h:2, a:1}, {id: 19, h:4, a:3}, {id: 20, h:0, a:5}] },
       { round: 8, matches: [{id: 21, h:2, a:0}, {id: 22, h:4, a:1}, {id: 23, h:5, a:3}] },
       { round: 9, matches: [{id: 24, h:0, a:4}, {id: 25, h:1, a:5}, {id: 26, h:3, a:2}] },
       { round: 10, matches: [{id: 27, h:3, a:0}, {id: 28, h:5, a:1}, {id: 29, h:4, a:2}] },
-
-      // 3巡目 (ホーム2回目)
       { round: 11, matches: [{id: 30, h:0, a:1}, {id: 31, h:2, a:3}, {id: 32, h:4, a:5}] },
       { round: 12, matches: [{id: 33, h:1, a:2}, {id: 34, h:3, a:4}, {id: 35, h:5, a:0}] },
       { round: 13, matches: [{id: 36, h:0, a:2}, {id: 37, h:1, a:4}, {id: 38, h:3, a:5}] },
       { round: 14, matches: [{id: 39, h:4, a:0}, {id: 40, h:5, a:1}, {id: 41, h:2, a:3}] },
       { round: 15, matches: [{id: 42, h:0, a:3}, {id: 43, h:1, a:5}, {id: 44, h:2, a:4}] },
-
-      // 4巡目 (ホーム2回目反転)
       { round: 16, matches: [{id: 45, h:1, a:0}, {id: 46, h:3, a:2}, {id: 47, h:5, a:4}] },
       { round: 17, matches: [{id: 48, h:2, a:1}, {id: 49, h:4, a:3}, {id: 50, h:0, a:5}] },
       { round: 18, matches: [{id: 51, h:2, a:0}, {id: 52, h:4, a:1}, {id: 53, h:5, a:3}] },
@@ -245,15 +237,34 @@
       { round: 20, matches: [{id: 57, h:3, a:0}, {id: 58, h:5, a:1}, {id: 59, h:4, a:2}] }
     ];
 
-    let data = {
+    const defaultData = {
       teams: ["チームA", "チームB", "チームC", "チームD", "チームE", "チームF"],
-      // matchesResults[matchId] = 'home_win', 'away_win', 'draw', ''
       results: Array(60).fill('')
     };
 
-    // 初期DOMの生成
+    let data = loadStorageData();
+
+    // ローカルストレージからの読み込み
+    function loadStorageData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch (e) {
+        console.warn('localStorage read error', e);
+      }
+      return JSON.parse(JSON.stringify(defaultData));
+    }
+
+    // ローカルストレージへの自動保存
+    function autoSave() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.warn('localStorage write error', e);
+      }
+    }
+
     function initDOM() {
-      // 1. スケジュール入力UIの生成
       const schedContainer = document.getElementById('scheduleContainer');
       schedContainer.innerHTML = '';
 
@@ -285,14 +296,12 @@
         schedContainer.appendChild(rDiv);
       });
 
-      // 2. 対戦表（星取表）のHTML骨組み生成
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
 
       for (let i = 0; i < N; i++) {
         const tr = document.createElement('tr');
 
-        // チーム名入力欄
         const tdName = document.createElement('td');
         const input = document.createElement('input');
         input.type = 'text';
@@ -300,12 +309,12 @@
         input.value = data.teams[i];
         input.oninput = (e) => {
           data.teams[i] = e.target.value;
+          autoSave();
           updateDisplay();
         };
         tdName.appendChild(input);
         tr.appendChild(tdName);
 
-        // 各対戦相手セル (相手ごとの戦績要約表示)
         for (let j = 0; j < N; j++) {
           const td = document.createElement('td');
           if (i === j) {
@@ -318,7 +327,6 @@
           tr.appendChild(td);
         }
 
-        // 成績セル
         const tdWin = document.createElement('td');
         tdWin.className = 'stats';
         tdWin.id = `win-${i}`;
@@ -349,15 +357,13 @@
       updateDisplay();
     }
 
-    // 勝敗入力変更時
     function onResultChange(matchId, val) {
       data.results[matchId] = val;
+      autoSave(); // 値変更時に自動保存
       updateDisplay();
     }
 
-    // 表示と計算の更新
     function updateDisplay() {
-      // 1. スケジュール内のチーム名と選択状態を同期
       scheduleTemplate.forEach(r => {
         r.matches.forEach(m => {
           const hName = data.teams[m.h] || `T${m.h+1}`;
@@ -373,7 +379,6 @@
         });
       });
 
-      // 2. 星取表のヘッダー・入力欄同期
       for (let i = 0; i < N; i++) {
         const thElem = document.getElementById(`th-${i}`);
         if (thElem) thElem.innerText = data.teams[i] || `T${i+1}`;
@@ -384,10 +389,7 @@
         }
       }
 
-      // 3. 成績の集計 (チーム別 & カード別)
-      // stats[i] = { win, lose, draw, rate }
       let stats = Array(N).fill(null).map(() => ({ win: 0, lose: 0, draw: 0 }));
-      // headToHead[i][j] = [結果文字列の配列]
       let headToHead = Array(N).fill(null).map(() => Array(N).fill(null).map(() => []));
 
       scheduleTemplate.forEach(r => {
@@ -414,7 +416,6 @@
         });
       });
 
-      // 星取表セル & 成績の更新
       let rankingStats = [];
       for (let i = 0; i < N; i++) {
         for (let j = 0; j < N; j++) {
@@ -444,7 +445,6 @@
         });
       }
 
-      // 4. 順位表の更新
       let ranked = [...rankingStats].sort((a, b) => (b.rate !== a.rate) ? (b.rate - a.rate) : (b.win - a.win));
       const rankingBody = document.getElementById('rankingBody');
       rankingBody.innerHTML = '';
@@ -468,12 +468,11 @@
       });
     }
 
-    // ファイル保存・読み込み
     function exportData() {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'league_4round_data.json';
+      a.download = 'league_4round_backup.json';
       a.click();
       URL.revokeObjectURL(a.href);
     }
@@ -486,8 +485,9 @@
       reader.onload = function(e) {
         try {
           data = JSON.parse(e.target.result);
+          autoSave();
           updateDisplay();
-          alert('データを読み込みました！');
+          alert('バックアップから復元しました！');
         } catch (err) {
           alert('ファイルの読み込みに失敗しました。');
         }
@@ -497,15 +497,12 @@
 
     function resetData() {
       if (confirm('すべての対戦データとチーム名を初期化しますか？')) {
-        data = {
-          teams: ["チームA", "チームB", "チームC", "チームD", "チームE", "チームF"],
-          results: Array(60).fill('')
-        };
+        data = JSON.parse(JSON.stringify(defaultData));
+        autoSave();
         updateDisplay();
       }
     }
 
-    // 初回構築
     initDOM();
   </script>
 </body>
