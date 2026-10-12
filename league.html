@@ -212,7 +212,7 @@
 
   <script>
     const N = 6;
-    const STORAGE_KEY = 'league_4round_auto_save_v1';
+    const STORAGE_KEY = 'league_4round_auto_save_v2';
 
     const scheduleTemplate = [
       { round: 1, matches: [{id: 0, h:0, a:1}, {id: 1, h:2, a:3}, {id: 2, h:4, a:5}] },
@@ -244,7 +244,6 @@
 
     let data = loadStorageData();
 
-    // ローカルストレージからの読み込み
     function loadStorageData() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -255,7 +254,6 @@
       return JSON.parse(JSON.stringify(defaultData));
     }
 
-    // ローカルストレージへの自動保存
     function autoSave() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -276,6 +274,7 @@
         r.matches.forEach(m => {
           const mDiv = document.createElement('div');
           mDiv.className = 'match-row';
+          const savedVal = data.results[m.id] || '';
           
           mDiv.innerHTML = `
             <div class="match-teams" id="match-label-${m.id}">
@@ -283,10 +282,10 @@
             </div>
             <div>
               <select id="select-match-${m.id}" onchange="onResultChange(${m.id}, this.value)">
-                <option value="">- 未処理 -</option>
-                <option value="home_win">○ ホーム勝</option>
-                <option value="away_win">● アウェイ勝</option>
-                <option value="draw">△ 引き分け</option>
+                <option value="" ${savedVal === '' ? 'selected' : ''}>- 未処理 -</option>
+                <option value="home_win" ${savedVal === 'home_win' ? 'selected' : ''}>○ ホーム勝</option>
+                <option value="away_win" ${savedVal === 'away_win' ? 'selected' : ''}>● アウェイ勝</option>
+                <option value="draw" ${savedVal === 'draw' ? 'selected' : ''}>△ 引き分け</option>
               </select>
             </div>
           `;
@@ -306,7 +305,7 @@
         const input = document.createElement('input');
         input.type = 'text';
         input.id = `input-team-${i}`;
-        input.value = data.teams[i];
+        input.value = data.teams[i] || `チーム${i+1}`;
         input.oninput = (e) => {
           data.teams[i] = e.target.value;
           autoSave();
@@ -359,7 +358,7 @@
 
     function onResultChange(matchId, val) {
       data.results[matchId] = val;
-      autoSave(); // 値変更時に自動保存
+      autoSave();
       updateDisplay();
     }
 
@@ -385,7 +384,7 @@
 
         const inputElem = document.getElementById(`input-team-${i}`);
         if (inputElem && inputElem.value !== data.teams[i]) {
-          inputElem.value = data.teams[i];
+          inputElem.value = data.teams[i] || `チーム${i+1}`;
         }
       }
 
@@ -486,7 +485,7 @@
         try {
           data = JSON.parse(e.target.result);
           autoSave();
-          updateDisplay();
+          initDOM();
           alert('バックアップから復元しました！');
         } catch (err) {
           alert('ファイルの読み込みに失敗しました。');
@@ -499,7 +498,7 @@
       if (confirm('すべての対戦データとチーム名を初期化しますか？')) {
         data = JSON.parse(JSON.stringify(defaultData));
         autoSave();
-        updateDisplay();
+        initDOM();
       }
     }
 
